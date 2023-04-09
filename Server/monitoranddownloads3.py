@@ -47,8 +47,8 @@ while True:
 
             print(f"File {file_key} downloaded and moved to {new_key}")
 
-        break
+        # break
 
     # Wait for some time before checking again
-    time.sleep(60)  # Adjust the sleep interval as needed
+    time.sleep(5)  # Adjust the sleep interval as needed
 

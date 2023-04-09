@@ -3,7 +3,6 @@ import time
 import os
 import datetime
 import requests
-import csv
 import gzip
 import math
 import boto3
@@ -143,11 +142,11 @@ class ThermalCamera:
         obj = boto3.client('s3')
 
         # Upload the compressed file to S3
-        # obj.upload_file(comp_file_name, self.bucket_name, client_ID + "-" + cam_ID + "-" + date_stamp + ".csv.gz")
-        obj.upload_file(file_name, self.bucket_name, "uploaded/" + client_ID + "-" + cam_ID + "-" + date_stamp + ".csv")
+        obj.upload_file(comp_file_name, self.bucket_name, "uploaded/" + client_ID + "-" + cam_ID + "-" + date_stamp + ".csv.gz")
+        # obj.upload_file(file_name, self.bucket_name, "uploaded/" + client_ID + "-" + cam_ID + "-" + date_stamp + ".csv")
         
         # Remove the original CSV file
-        # os.remove(file_name)
+        os.remove(comp_file_name)
 
 
     
