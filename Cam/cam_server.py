@@ -31,7 +31,7 @@ class ThermalCamera:
 
         # self.temp, self.humidity, self.pressure, self.altitude, self.dew_point, self.eq_sea_level_pressure, self.heat_index, self.abs_humidity = self.read_serial_data()
 
-        self.client_id = "a1"
+        self.client_id = "aa11"
         self.cam_id = self.camera_id
         self.comment = ""
         self.latitude = "46.2319"
