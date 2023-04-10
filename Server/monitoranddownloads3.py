@@ -1,6 +1,7 @@
 import boto3
 import time
 import os
+import pika
 
 bucket_name = "agaicamstorage"
 new_bucket_name = "agaidata"
@@ -8,8 +9,19 @@ local_folder = "/tmp/downloadtest/"
 source_folder = "uploaded"
 destination_folder = "stored"
 
+# RabbitMQ settings
+rabbitmq_host = "localhost"  # Replace with your RabbitMQ host
+queue_name = "file_queue"
+
 # Create an S3 client
 s3 = boto3.client("s3")
+
+# Connect to RabbitMQ
+connection = pika.BlockingConnection(pika.ConnectionParameters(rabbitmq_host))
+channel = connection.channel()
+
+# Declare a RabbitMQ queue
+channel.queue_declare(queue=queue_name)
 
 def list_files_in_folder(bucket, folder):
     response = s3.list_objects_v2(Bucket=bucket, Prefix=folder + "/")
@@ -30,25 +42,22 @@ while True:
 
     if files:
         for file_key in files:
-            print(f"File {file_key} found in {source_folder} folder")
-            # Download the file
-            local_file_path = f"{local_folder}{os.path.basename(file_key)}"
+            # Download the file from S3
+            local_file_name = os.path.basename(file_key)
+            local_file_path = os.path.join(local_folder, local_file_name)
             s3.download_file(bucket_name, file_key, local_file_path)
+            print(f"Downloaded {file_key} to {local_file_path}")
 
-            # Extract file details from the file name
-            file_name = os.path.basename(file_key)
-            file_parts = file_name.split("-")
-            client_id, camera_id, date_part, time_part = file_parts[0], file_parts[1], file_parts[2][:8], file_parts[2][8:]
-            year, month, day = date_part[:4], date_part[4:6], date_part[6:8]
+            # Move the file to the new S3 bucket
+            destination_key = file_key.replace(source_folder, destination_folder)
+            move_file_to_new_bucket(bucket_name, file_key, new_bucket_name, destination_key)
 
-            # Move the file to the destination bucket with the desired folder structure
-            new_key = f"{client_id}/{camera_id}/{year}/{month}/{day}/{file_name}"
-            move_file_to_new_bucket(bucket_name, file_key, new_bucket_name, new_key)
-
-            print(f"File {file_key} downloaded and moved to {new_key}")
-
-        # break
+            # Publish the local file path to the RabbitMQ queue
+            channel.basic_publish(exchange="", routing_key=queue_name, body=local_file_path)
+            print(f"Published {local_file_path} to the RabbitMQ queue")
 
     # Wait for some time before checking again
     time.sleep(5)  # Adjust the sleep interval as needed
 
+# Close the RabbitMQ connection
+connection.close()

@@ -26,7 +26,7 @@ class ThermalCamera:
         self.next_call = time.time()
         self.camera_id = ""
         self.bucket_name = "agaicamstorage"
-        self.cap_interval = 3 # in seconds
+        self.cap_interval = 1 # in seconds
 
         # self.temp, self.humidity, self.pressure, self.altitude, self.dew_point, self.eq_sea_level_pressure, self.heat_index, self.abs_humidity = self.read_serial_data()
 
@@ -144,6 +144,8 @@ class ThermalCamera:
         # Upload the compressed file to S3
         obj.upload_file(comp_file_name, self.bucket_name, "uploaded/" + client_ID + "-" + cam_ID + "-" + date_stamp + ".csv.gz")
         # obj.upload_file(file_name, self.bucket_name, "uploaded/" + client_ID + "-" + cam_ID + "-" + date_stamp + ".csv")
+
+        print("File uploaded to S3")
         
         # Remove the original CSV file
         os.remove(comp_file_name)
