@@ -253,16 +253,24 @@ class AgAIProcessor:
     def process_file(self, file_path):
 
         # Unzip the file
-        unzipped_file_path = file_path[:-3]  # Remove the '.gz' extension
-        with gzip.open(file_path, 'rb') as gzipped_file:
-            with open(unzipped_file_path, 'wb') as unzipped_file:
-                unzipped_file.write(gzipped_file.read())
+        # unzipped_file_path = file_path[:-3]  # Remove the '.gz' extension
+        # with gzip.open(file_path, 'rb') as gzipped_file:
+        #     with open(unzipped_file_path, 'wb') as unzipped_file:
+        #         unzipped_file.write(gzipped_file.read())
 
-        with open(unzipped_file_path, 'r') as f:
+        # with open(unzipped_file_path, 'r') as f:
+        # # with open(file_path, 'r') as f:
+        #     lines = f.readlines()
+        #     if len(lines) < 2:
+        #         print('Error: file does not contain metadata and data')
+
+        with open(file_path, 'r') as f:
         # with open(file_path, 'r') as f:
             lines = f.readlines()
             if len(lines) < 2:
                 print('Error: file does not contain metadata and data')
+        
+        
             
             info_line = lines[0]
 
@@ -290,17 +298,17 @@ class AgAIProcessor:
             cloud_coverage = int(data['cloud_coverage'])
 
             array_data = np.loadtxt(lines[1:], delimiter=' ')
-            print('Loaded data from file:', unzipped_file_path)
+            # print('Loaded data from file:', unzipped_file_path)
 
             img, master_boxes = self.get_values(array_data)
             self.save_to_db(date_stamp, client_ID, cam_ID, comment, latitude, longitude, elevation, temperature, pressure, humidity, dew_point, relative_humidity, wetbulb_temp, heat_index, wind_speed, wind_deg, wind_chill, weather_type, weather_desc, cloud_coverage, model, master_boxes, img, array_data)
 
         # Delete the unzipped file after processing
-        os.remove(unzipped_file_path)
+        # os.remove(unzipped_file_path)
 
 if __name__ == "__main__":
-    data_folder = "/home/ryanbert/Documents/awstest"
-    model_path = '/home/ryanbert/code/AgAI/models/'
+    data_folder = "/home/agai/Documents/awstest"
+    model_path = '/home/agai/code/AgAI_CS/models/'
     model = 'v8sSeg3_6_23'
     file_path = sys.argv[1]
 
