@@ -41,7 +41,7 @@ def process_message(ch, method, properties, body):
     try:
         # Run testimg.py script with the file name as an argument
         # script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testimg.py')
-        script_path = '/home/agai/code/AgaI_CS/ProcServer/procserver.py'
+        script_path = '/home/agai/code/AgAI_CS/ProcServer/procserver.py'
         result = subprocess.Popen(['python', script_path, file_path])
 
         # Check if the subprocess completed successfully

@@ -8,8 +8,8 @@ import time
 
 def get_rabbitmq_connection():
     try:
-        credentials = pika.PlainCredentials('username', 'password')
-        parameters = pika.ConnectionParameters('linuxlapserver', credentials=credentials)
+        credentials = pika.PlainCredentials('guest', 'guest')
+        parameters = pika.ConnectionParameters('mission', credentials=credentials)
         connection = pika.BlockingConnection(parameters)
         return connection
     except Exception as e:
@@ -54,7 +54,8 @@ class FileEventHandler(FileSystemEventHandler):
         self.published_files.add(file_path)
 
         # Replace server file path with client file path
-        file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
+        # file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
+        file_path = '/tmp/downloadtest'
         channel.basic_publish(exchange='', routing_key='file_queue', body=file_path.encode())
         print("File %s published to queue" % file_path)
 
@@ -64,7 +65,8 @@ class FileEventHandler(FileSystemEventHandler):
             return
         file_path = event.src_path
         # Replace server file path with client file path
-        file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
+        # file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
+        file_path = '/tmp/downloadtest'
         try:
             method_frame, header_frame, body = channel.basic_get(queue='file_queue')
             while method_frame:
@@ -91,7 +93,8 @@ class FileObserver:
         self.observer.join()
 
 # Start observer in a separate thread
-observer = FileObserver('/srv/nfs/data/data')
+# observer = FileObserver('/srv/nfs/data/data')
+observer = FileObserver('/tmp/downloadtest')
 observer.start()
 
 # Start consuming messages in a separate thread
@@ -101,12 +104,21 @@ def consume_messages():
 consume_thread = threading.Thread(target=consume_messages, daemon=True)
 consume_thread.start()
 
-# Check if there are existing files in the folder
-for filename in os.listdir('/srv/nfs/data/data'):
-    if filename.endswith('.csv'):
-        file_path = os.path.join('/srv/nfs/data/data', filename)
+# # Check if there are existing files in the folder
+# for filename in os.listdir('/srv/nfs/data/data'):
+#     if filename.endswith('.csv'):
+#         file_path = os.path.join('/srv/nfs/data/data', filename)
+#         # Replace server file path with client file path
+#         file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
+#         channel.basic_publish(exchange='', routing_key='file_queue', body=file_path.encode())
+#         print("File %s published to queue" % file_path)
+#         time.sleep(1)  # Add a delay of 1 second
+
+for filename in os.listdir('/tmp/downloadtest'):
+    if filename.endswith('.gz'):
+        file_path = os.path.join('/tmp/downloadtest', filename)
         # Replace server file path with client file path
-        file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
+        # file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
         channel.basic_publish(exchange='', routing_key='file_queue', body=file_path.encode())
         print("File %s published to queue" % file_path)
         time.sleep(1)  # Add a delay of 1 second

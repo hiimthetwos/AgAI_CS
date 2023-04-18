@@ -6,11 +6,11 @@ import pika
 bucket_name = "agaicamstorage"
 new_bucket_name = "agaidata"
 local_folder = "/tmp/downloadtest/"
-source_folder = "uploaded"
+source_folder = "collected"
 destination_folder = "stored"
 
 # RabbitMQ settings
-rabbitmq_host = "localhost"  # Replace with your RabbitMQ host
+rabbitmq_host = "mission"  # Replace with your RabbitMQ host
 queue_name = "file_queue"
 
 # Create an S3 client
@@ -46,6 +46,11 @@ while True:
             local_file_name = os.path.basename(file_key)
             local_file_path = os.path.join(local_folder, local_file_name)
             s3.download_file(bucket_name, file_key, local_file_path)
+
+            # Wait for the file to finish downloading
+            while not os.path.exists(local_file_path):
+                time.sleep(1)
+
             print(f"Downloaded {file_key} to {local_file_path}")
 
             # Move the file to the new S3 bucket
