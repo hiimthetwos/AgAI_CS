@@ -98,7 +98,17 @@ class AgAIProcessor:
             else:
                 values_inside_polygon = None
             
+            # Draw the polygon
             cv2.polylines(img, [seg], True, (0, 0, 255), 4)
+
+            # Draw the bounding box
+            # cv2.rectangle(img, (x, y), (x2, y2), (255, 0, 0), 2)
+
+            # Write the Temperature on the image
+            # cv2.putText(img, (str(label) + " " + str(int(np.mean(values_inside_polygon))) + "C"), (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), 2)
+
+            cv2.putText(img, ("# "  + str(cow_number)), (x, y - 10), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), 2)
+
 
 
             if values_inside_polygon is not None:
@@ -160,100 +170,100 @@ class AgAIProcessor:
         
         cv2.imwrite(image_path, img, [cv2.IMWRITE_JPEG_QUALITY, 65])
 
-        bucket_name = "agaicamstorage"
+        # bucket_name = "agaicamstorage"
 
-        # Upload the compressed file to S3
-        obj = boto3.client('s3')
-        obj.upload_file(image_path, bucket_name, "images/" + client_ID + "-" + cam_ID + "-" + date_stamp + ".jpg")
+        # # Upload the compressed file to S3
+        # obj = boto3.client('s3')
+        # obj.upload_file(image_path, bucket_name, "images/" + client_ID + "-" + cam_ID + "-" + date_stamp + ".jpg")
 
-        config = {
-            'host': 'agaidatabase.cog2fppyk9lm.us-east-2.rds.amazonaws.com',
-            'user': 'admin',
-            'password': 'measuremeinmeteredlines',
-            'database': 'agaidatabase'
-        }
+        # config = {
+        #     'host': 'agaidatabase.cog2fppyk9lm.us-east-2.rds.amazonaws.com',
+        #     'user': 'admin',
+        #     'password': 'measuremeinmeteredlines',
+        #     'database': 'agaidatabase'
+        # }
 
-        # Connect to the MySQL server
-        print("Connecting to database...")
-        try:
-            conn = pymysql.connect(
-                host=config['host'],
-                user=config['user'],
-                password=config['password'],
-                database=config['database']
-            )
-            print("Connection established")
-        except pymysql.err.OperationalError as err:
-            if err.args[0] == 1045:  # Access denied error
-                print("Something is wrong with the user name or password")
-            elif err.args[0] == 1049:  # Unknown database error
-                # Create the database if it does not exist
-                conn = pymysql.connect(
-                    host=config['host'],
-                    user=config['user'],
-                    password=config['password']
-                )
-                cursor = conn.cursor()
-                cursor.execute("CREATE DATABASE {}".format(config['database']))
-                print("Database created")
-                conn.close()
-                # Reconnect to the newly created database
-                conn = pymysql.connect(
-                    host=config['host'],
-                    user=config['user'],
-                    password=config['password'],
-                    database=config['database']
-                )
-            else:
-                print(err)
+        # # Connect to the MySQL server
+        # print("Connecting to database...")
+        # try:
+        #     conn = pymysql.connect(
+        #         host=config['host'],
+        #         user=config['user'],
+        #         password=config['password'],
+        #         database=config['database']
+        #     )
+        #     print("Connection established")
+        # except pymysql.err.OperationalError as err:
+        #     if err.args[0] == 1045:  # Access denied error
+        #         print("Something is wrong with the user name or password")
+        #     elif err.args[0] == 1049:  # Unknown database error
+        #         # Create the database if it does not exist
+        #         conn = pymysql.connect(
+        #             host=config['host'],
+        #             user=config['user'],
+        #             password=config['password']
+        #         )
+        #         cursor = conn.cursor()
+        #         cursor.execute("CREATE DATABASE {}".format(config['database']))
+        #         print("Database created")
+        #         conn.close()
+        #         # Reconnect to the newly created database
+        #         conn = pymysql.connect(
+        #             host=config['host'],
+        #             user=config['user'],
+        #             password=config['password'],
+        #             database=config['database']
+        #         )
+        #     else:
+        #         print(err)
 
-        cursor = conn.cursor()
+        # cursor = conn.cursor()
 
-        cursor.execute(f"USE {config['database']}")
+        # cursor.execute(f"USE {config['database']}")
 
-        # Create the table if it doesn't already exist
-        table_name = f"client_{client_ID}"
+        # # Create the table if it doesn't already exist
+        # table_name = f"client_{client_ID}"
 
-        cursor.execute(
-            f"CREATE TABLE IF NOT EXISTS {table_name} "
-            "(id INT AUTO_INCREMENT PRIMARY KEY, "
-            "date_stamp VARCHAR(255) NOT NULL, "
-            "client_id VARCHAR(255) NOT NULL, "
-            "camera VARCHAR(255) NOT NULL, "
-            "comment TEXT NOT NULL, "
-            "lat FLOAT(10,6) NOT NULL, "
-            "lon FLOAT(10,6) NOT NULL, "
-            "elevation FLOAT(10,6) NOT NULL, "
-            "temp FLOAT(10,6) NOT NULL, "
-            "pressure FLOAT(10,6) NOT NULL, "
-            "humidity FLOAT(10,6) NOT NULL, "
-            "dew_point FLOAT(10,6) NOT NULL, "
-            "relative_humidity FLOAT(10,6) NOT NULL, "
-            "wetbulb_temp FLOAT(10,6) NOT NULL, "
-            "heat_index FLOAT(10,6) NOT NULL, "
-            "wind_speed FLOAT(10,6) NOT NULL, "
-            "wind_deg INT NOT NULL, "
-            "wind_chill FLOAT(10,6) NOT NULL, "
-            "weather_type VARCHAR(255) NOT NULL, "
-            "weather_desc VARCHAR(255) NOT NULL, "
-            "cloud_coverage INT NOT NULL, "
-            "model VARCHAR(255) NOT NULL, "
-            "number_detected INT NOT NULL, "
-            "list_of_detected_objects TEXT NOT NULL, "
-            "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
-        )
+        # cursor.execute(
+        #     f"CREATE TABLE IF NOT EXISTS {table_name} "
+        #     "(id INT AUTO_INCREMENT PRIMARY KEY, "
+        #     "date_stamp VARCHAR(255) NOT NULL, "
+        #     "client_id VARCHAR(255) NOT NULL, "
+        #     "camera VARCHAR(255) NOT NULL, "
+        #     "comment TEXT NOT NULL, "
+        #     "lat FLOAT(10,6) NOT NULL, "
+        #     "lon FLOAT(10,6) NOT NULL, "
+        #     "elevation FLOAT(10,6) NOT NULL, "
+        #     "temp FLOAT(10,6) NOT NULL, "
+        #     "pressure FLOAT(10,6) NOT NULL, "
+        #     "humidity FLOAT(10,6) NOT NULL, "
+        #     "dew_point FLOAT(10,6) NOT NULL, "
+        #     "relative_humidity FLOAT(10,6) NOT NULL, "
+        #     "wetbulb_temp FLOAT(10,6) NOT NULL, "
+        #     "heat_index FLOAT(10,6) NOT NULL, "
+        #     "wind_speed FLOAT(10,6) NOT NULL, "
+        #     "wind_deg INT NOT NULL, "
+        #     "wind_chill FLOAT(10,6) NOT NULL, "
+        #     "weather_type VARCHAR(255) NOT NULL, "
+        #     "weather_desc VARCHAR(255) NOT NULL, "
+        #     "cloud_coverage INT NOT NULL, "
+        #     "model VARCHAR(255) NOT NULL, "
+        #     "number_detected INT NOT NULL, "
+        #     "list_of_detected_objects TEXT NOT NULL, "
+        #     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"
+        # )
 
-        insert_query = (f"INSERT INTO {table_name} "
-                        f"(date_stamp, client_id, camera, comment, lat, lon, elevation, temp, pressure, humidity, dew_point, relative_humidity, wetbulb_temp, heat_index, wind_speed, wind_deg, wind_chill, weather_type, weather_desc, cloud_coverage, model, number_detected, list_of_detected_objects)"
-                        f"VALUES ('{date_stamp}', '{client_ID}', '{cam_ID}', '{comment}', {latitude}, {longitude}, {elevation}, {temperature}, {pressure}, {humidity}, {dew_point}, {relative_humidity}, {wetbulb_temp}, {heat_index}, {wind_speed}, {wind_deg}, {wind_chill}, '{weather_type}', '{weather_desc}', {cloud_coverage}, '{model}', {len(master_boxes)}, '{json.dumps(master_boxes)}')")
+        # insert_query = (f"INSERT INTO {table_name} "
+        #                 f"(date_stamp, client_id, camera, comment, lat, lon, elevation, temp, pressure, humidity, dew_point, relative_humidity, wetbulb_temp, heat_index, wind_speed, wind_deg, wind_chill, weather_type, weather_desc, cloud_coverage, model, number_detected, list_of_detected_objects)"
+        #                 f"VALUES ('{date_stamp}', '{client_ID}', '{cam_ID}', '{comment}', {latitude}, {longitude}, {elevation}, {temperature}, {pressure}, {humidity}, {dew_point}, {relative_humidity}, {wetbulb_temp}, {heat_index}, {wind_speed}, {wind_deg}, {wind_chill}, '{weather_type}', '{weather_desc}', {cloud_coverage}, '{model}', {len(master_boxes)}, '{json.dumps(master_boxes)}')")
 
-        cursor.execute(insert_query)
-        conn.commit()
-        print("Inserted data")
+        # cursor.execute(insert_query)
+        # conn.commit()
+        # print("Inserted data")
 
-        # Clean up
-        cursor.close()
-        conn.close()
+        # # Clean up
+        # cursor.close()
+        # conn.close()
 
 
     def process_file(self, file_path):
