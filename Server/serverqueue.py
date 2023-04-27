@@ -54,8 +54,8 @@ class FileEventHandler(FileSystemEventHandler):
         self.published_files.add(file_path)
 
         # Replace server file path with client file path
-        # file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
-        file_path = '/tmp/downloadtest'
+        file_path = file_path.replace('/srv/data/upload', '/mnt/data/upload')
+        # file_path = '/tmp/downloadtest'
         channel.basic_publish(exchange='', routing_key='file_queue', body=file_path.encode())
         print("File %s published to queue" % file_path)
 
@@ -65,8 +65,8 @@ class FileEventHandler(FileSystemEventHandler):
             return
         file_path = event.src_path
         # Replace server file path with client file path
-        # file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
-        file_path = '/tmp/downloadtest'
+        file_path = file_path.replace('/srv/data/upload', '/mnt/data/upload')
+        # file_path = '/tmp/downloadtest'
         try:
             method_frame, header_frame, body = channel.basic_get(queue='file_queue')
             while method_frame:
@@ -94,7 +94,7 @@ class FileObserver:
 
 # Start observer in a separate thread
 # observer = FileObserver('/srv/nfs/data/data')
-observer = FileObserver('/tmp/downloadtest')
+observer = FileObserver('/srv/data/upload')
 observer.start()
 
 # Start consuming messages in a separate thread
@@ -114,11 +114,11 @@ consume_thread.start()
 #         print("File %s published to queue" % file_path)
 #         time.sleep(1)  # Add a delay of 1 second
 
-for filename in os.listdir('/tmp/downloadtest'):
+for filename in os.listdir('/srv/data/upload'):
     if filename.endswith('.gz'):
-        file_path = os.path.join('/tmp/downloadtest', filename)
+        file_path = os.path.join('/srv/data/upload', filename)
         # Replace server file path with client file path
-        # file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
+        file_path = file_path.replace('/srv/data/upload', '/mnt/data/upload')
         channel.basic_publish(exchange='', routing_key='file_queue', body=file_path.encode())
         print("File %s published to queue" % file_path)
         time.sleep(1)  # Add a delay of 1 second

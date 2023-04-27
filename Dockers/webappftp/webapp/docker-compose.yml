@@ -1,0 +1,30 @@
+version: '3.7'
+services:
+  ftp-server:
+    container_name: my-ftp-server
+    environment:
+      - FTP_PASS=pass
+      - FTP_USER=user
+    image: garethflowers/ftp-server
+    ports:
+      - '20-21:20-21/tcp'
+      - '40000-40009:40000-40009/tcp'
+    volumes:
+      - '/mnt/data/upload:/home/user'
+
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./mysite/static:/static
+      - /mnt/data:/mnt/data
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./mysite/static:/static
+

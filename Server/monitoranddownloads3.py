@@ -5,7 +5,7 @@ import pika
 
 bucket_name = "agaicamstorage"
 new_bucket_name = "agaidata"
-local_folder = "/tmp/downloadtest/"
+local_folder = "/home/ryanbert/Documents/frompi/"
 source_folder = "collected"
 destination_folder = "stored"
 
@@ -58,8 +58,8 @@ while True:
             move_file_to_new_bucket(bucket_name, file_key, new_bucket_name, destination_key)
 
             # Publish the local file path to the RabbitMQ queue
-            channel.basic_publish(exchange="", routing_key=queue_name, body=local_file_path)
-            print(f"Published {local_file_path} to the RabbitMQ queue")
+            # channel.basic_publish(exchange="", routing_key=queue_name, body=local_file_path)
+            # print(f"Published {local_file_path} to the RabbitMQ queue")
 
     # Wait for some time before checking again
     time.sleep(5)  # Adjust the sleep interval as needed
