@@ -1,8 +1,15 @@
 import pymysql
 
+# config = {
+#     'host': 'agaidatabase.cog2fppyk9lm.us-east-2.rds.amazonaws.com',
+#     'user': 'admin',
+#     'password': 'measuremeinmeteredlines',
+#     'database': 'agaidatabase'
+# }
+
 config = {
-    'host': 'agaidatabase.cog2fppyk9lm.us-east-2.rds.amazonaws.com',
-    'user': 'admin',
+    'host': 'beartooth',
+    'user': 'root',
     'password': 'measuremeinmeteredlines',
     'database': 'agaidatabase'
 }

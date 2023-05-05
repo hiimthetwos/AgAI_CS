@@ -29,8 +29,6 @@ class YOLOSegmentation:
                 segmentation_contours_idx.append(segment)
         else:
             # Handle the case when result.masks is None
-            # You could print a message, set a default value for segmentation_contours_idx,
-            # or raise an exception depending on your use case.
             print("No masks were found.")
 
         bboxes = np.array(result.boxes.xyxy.cpu(), dtype="int")

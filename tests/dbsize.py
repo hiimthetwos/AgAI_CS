@@ -1,8 +1,8 @@
 import pymysql
 
 config = {
-    'host': 'agaidatabase.cog2fppyk9lm.us-east-2.rds.amazonaws.com',
-    'user': 'admin',
+    'host': 'beartooth',
+    'user': 'root',
     'password': 'measuremeinmeteredlines',
     'database': 'agaidatabase'
 }
@@ -45,12 +45,12 @@ cursor = conn.cursor()
 
 cursor.execute(f"USE {config['database']}")
 
-# Query the information_schema database to retrieve the size of every table in the database
-cursor.execute("SELECT table_name, (data_length + index_length) / 1024 / 1024 AS size_mb FROM information_schema.tables WHERE table_schema = %s", (config['database'],))
+# Query the information_schema database to retrieve the size and number of entries for every table in the database
+cursor.execute("SELECT table_name, table_rows, (data_length + index_length) / 1024 / 1024 AS size_mb FROM information_schema.tables WHERE table_schema = %s", (config['database'],))
 
 # Print the results
 for row in cursor.fetchall():
-    print(f"{row[0]}: {row[1]:.2f} MB")
+    print(f"{row[0]}: {row[1]:,} entries, {row[2]:.2f} MB")
 
 # Clean up
 cursor.close()

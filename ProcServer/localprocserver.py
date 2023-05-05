@@ -8,6 +8,7 @@ import json
 import sys
 import gzip
 import os
+import shutil
 
 
 class AgAIProcessor:
@@ -267,19 +268,38 @@ class AgAIProcessor:
 
 
     def process_file(self, file_path):
-
+            
         # Unzip the file
-        unzipped_file_path = file_path[:-3]  # Remove the '.gz' extension
+        file_name = os.path.basename(file_path)
+        unzipped_file_name = file_name[:-3]  # Remove the '.gz' extension
+        destination_folder = '/mnt/data/tmp'
+        os.makedirs(destination_folder, exist_ok=True)
+        unzipped_file_path = os.path.join(destination_folder, unzipped_file_name)
+
         with gzip.open(file_path, 'rb') as gzipped_file:
             with open(unzipped_file_path, 'wb') as unzipped_file:
                 unzipped_file.write(gzipped_file.read())
 
         with open(unzipped_file_path, 'r') as f:
-        # with open(file_path, 'r') as f:
             lines = f.readlines()
             if len(lines) < 2:
                 print('Error: file does not contain metadata and data')
 
+
+        # # Unzip the file
+        # unzipped_file_path = file_path[:-3]  # Remove the '.gz' extension
+        # with gzip.open(file_path, 'rb') as gzipped_file:
+        #     with open(unzipped_file_path, 'wb') as unzipped_file:
+        #         unzipped_file.write(gzipped_file.read())
+
+        # with open(unzipped_file_path, 'r') as f:
+        # # with open(file_path, 'r') as f:
+        #     lines = f.readlines()
+        #     if len(lines) < 2:
+        #         print('Error: file does not contain metadata and data')
+
+
+        # # Process a csv
         # with open(file_path, 'r') as f:
         # # with open(file_path, 'r') as f:
         #     lines = f.readlines()
@@ -322,6 +342,15 @@ class AgAIProcessor:
 
         # Delete the unzipped file after processing
         # os.remove(unzipped_file_path)
+
+        # Delete the unzipped file from the temp folder
+        os.remove(unzipped_file_path)
+
+        # Move the zipped file to /mnt/data/stored and delete it from its current location
+        stored_folder = '/mnt/data/stored'
+        os.makedirs(stored_folder, exist_ok=True)
+        stored_file_path = os.path.join(stored_folder, file_name)
+        shutil.move(file_path, stored_file_path)
 
 if __name__ == "__main__":
     data_folder = "/mnt/data"

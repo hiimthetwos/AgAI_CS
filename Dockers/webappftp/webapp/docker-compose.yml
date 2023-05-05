@@ -1,16 +1,18 @@
 version: '3.7'
 services:
-  ftp-server:
-    container_name: my-ftp-server
+  ftp:
+    image: stilliard/pure-ftpd
+    container_name: ftp_server
     environment:
-      - FTP_PASS=pass
-      - FTP_USER=user
-    image: garethflowers/ftp-server
-    ports:
-      - '20-21:20-21/tcp'
-      - '40000-40009:40000-40009/tcp'
+      - PUBLICHOST=localhost
+      - FTP_USER_NAME=user
+      - FTP_USER_PASS=pass
+      - FTP_USER_HOME=/mnt/data/upload
     volumes:
-      - '/mnt/data/upload:/home/user'
+      - /mnt/data/upload:/mnt/data/upload
+    ports:
+      - "21:21"
+      - "30000-30009:30000-30009"
 
   web:
     build: .
@@ -27,4 +29,18 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./mysite/static:/static
+
+  cloudflare-ddns:
+    image: timothyjmiller/cloudflare-ddns:latest
+    container_name: cloudflare-ddns
+    security_opt:
+      - no-new-privileges:true
+    network_mode: 'host'
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /root/webapp/cloudflare-ddns/config.json:/config.json
+    restart: unless-stopped
+
 

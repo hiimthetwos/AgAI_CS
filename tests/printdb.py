@@ -2,8 +2,8 @@ import pymysql
 
 # Define connection details
 connection = pymysql.connect(
-    host='agaidatabase.cog2fppyk9lm.us-east-2.rds.amazonaws.com',
-    user='admin',
+    host='beartooth',
+    user='root',
     password='measuremeinmeteredlines',
     database='agaidatabase'
 )

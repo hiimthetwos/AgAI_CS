@@ -8,20 +8,36 @@ import time
 
 def get_rabbitmq_connection():
     try:
-        credentials = pika.PlainCredentials('guest', 'guest')
-        parameters = pika.ConnectionParameters('mission', credentials=credentials)
+        credentials = pika.PlainCredentials('agai', 'agai')
+        parameters = pika.ConnectionParameters('beartooth', credentials=credentials, heartbeat=600)
         connection = pika.BlockingConnection(parameters)
         return connection
     except Exception as e:
         print("Error connecting to RabbitMQ server: %s" % e)
         return None
 
-# Set up RabbitMQ connection
-connection = get_rabbitmq_connection()
-while not connection:
-    print("Retrying RabbitMQ connection...")
-    time.sleep(5)
+def setup_rabbitmq():
+    global connection, channel
     connection = get_rabbitmq_connection()
+    while not connection:
+        print("Retrying RabbitMQ connection...")
+        time.sleep(5)
+        connection = get_rabbitmq_connection()
+
+    channel = connection.channel()
+    channel.queue_declare(queue='file_queue')
+
+def reconnect_rabbitmq():
+    while True:
+        try:
+            setup_rabbitmq()
+            break
+        except Exception as e:
+            print("Error reconnecting to RabbitMQ server: %s" % e)
+            time.sleep(5)
+
+# Set up RabbitMQ connection
+setup_rabbitmq()
 
 channel = connection.channel()
 channel.queue_declare(queue='file_queue')
@@ -93,7 +109,6 @@ class FileObserver:
         self.observer.join()
 
 # Start observer in a separate thread
-# observer = FileObserver('/srv/nfs/data/data')
 observer = FileObserver('/srv/data/upload')
 observer.start()
 
@@ -104,16 +119,7 @@ def consume_messages():
 consume_thread = threading.Thread(target=consume_messages, daemon=True)
 consume_thread.start()
 
-# # Check if there are existing files in the folder
-# for filename in os.listdir('/srv/nfs/data/data'):
-#     if filename.endswith('.csv'):
-#         file_path = os.path.join('/srv/nfs/data/data', filename)
-#         # Replace server file path with client file path
-#         file_path = file_path.replace('/srv/nfs/data', '/mnt/nfs/data')
-#         channel.basic_publish(exchange='', routing_key='file_queue', body=file_path.encode())
-#         print("File %s published to queue" % file_path)
-#         time.sleep(1)  # Add a delay of 1 second
-
+# Publish existing files
 for filename in os.listdir('/srv/data/upload'):
     if filename.endswith('.gz'):
         file_path = os.path.join('/srv/data/upload', filename)
@@ -123,10 +129,19 @@ for filename in os.listdir('/srv/data/upload'):
         print("File %s published to queue" % file_path)
         time.sleep(1)  # Add a delay of 1 second
 
-try:
-    # Wait for observer and consume threads to complete
-    observer.thread.join()
-    consume_thread.join
+while True:
+    try:
+        # Wait for observer and consume threads to complete
+        observer.thread.join()
+        consume_thread.join()
 
-finally:
-    print("Server stopped.")
+    except pika.exceptions.StreamLostError as e:
+        print("Stream connection lost: %s" % e)
+        reconnect_rabbitmq()
+
+    except KeyboardInterrupt:
+        print("Server stopped by user.")
+        break
+
+    finally:
+        print("Server stopped.")

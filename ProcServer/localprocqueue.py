@@ -12,7 +12,7 @@ GPUs = GPUtil.getGPUs()
 
 # Set up RabbitMQ connection
 try:
-    credentials = pika.PlainCredentials('agai', 'news5232')
+    credentials = pika.PlainCredentials('agai', 'agai')
     parameters = pika.ConnectionParameters('beartooth', credentials=credentials)
     connection = pika.BlockingConnection(parameters)
 except Exception as e:
