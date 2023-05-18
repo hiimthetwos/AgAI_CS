@@ -365,11 +365,146 @@ def get_previous_next():
     response.headers.set('Content-Type', 'text/plain')
     return response
 
+@app.route('/get_latest', methods=['GET'])
+def get_latest():
+    username = request.args.get('username')
+    serial_number = request.args.get('serial_number')
 
-@app.route('/create_client_table', methods=['GET'])
-def create_client_table():
-    # Implement the logic to create a table with a list of client ids/usernames and serials
-    pass
+    if not username or not serial_number:
+        return jsonify({"error": "Username or serial number is missing."}), 400
+
+    table_name = f"client_{username}"
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    cursor.execute(f"SELECT * FROM {table_name} WHERE camera = %s ORDER BY date_stamp DESC LIMIT 1", (serial_number,))
+    row = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if row is None:
+        return jsonify({"error": "No data found for the specified username and serial number."}), 404
+
+    date_stamp, cam_id, master_boxes_json = row[1], row[3], row[-2]
+    dt = datetime.strptime(date_stamp, "%Y%m%d-%H%M%S")
+    formatted_dt = dt.strftime("%B %d, %Y %I:%M %p")
+
+    img_path = f"mysite/static/{username}-{cam_id}-{date_stamp}.jpg"
+
+    url = f"https://agaicamstorage.s3.us-west-2.amazonaws.com/images/{username}-{cam_id}-{date_stamp}.jpg"
+    filename = f"{username}-{cam_id}-{date_stamp}.jpg"
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        with open(f'mysite/static/{filename}', 'wb') as file:
+            file.write(response.content)
+            img_path = f"static/{username}-{cam_id}-{date_stamp}.jpg"
+    else:
+        print(f"Error downloading file: {response.status_code}")
+
+    master_boxes = json.loads(master_boxes_json)
+
+    response_data = {
+        "datetime": formatted_dt,
+        "datestring": date_stamp,
+        "imgurl": f"{request.url_root}{img_path}",
+        "master_boxes": master_boxes
+    }
+
+    return jsonify(response_data)
+
+@app.route('/get_direction', methods=['GET'])
+def get_direction():
+
+    username = request.args.get('username')
+    serial_number = request.args.get('serial_number')
+    timestamp = request.args.get('timestamp')
+    direction = request.args.get('direction')
+
+    if not username or not serial_number or not timestamp or not direction:
+        return jsonify({"error": "Username, serial_number, timestamp, or direction is missing."})
+
+    if direction not in ["previous", "next"]:
+        return jsonify({"error": "Invalid direction value. It should be either 'previous' or 'next'."})
+
+    table_name = f"client_{username}"
+    connection = get_db_connection()
+    cursor = connection.cursor()
+
+    input_timestamp = datetime.strptime(timestamp, "%Y%m%d-%H%M%S")
+
+    if direction == "previous":
+        order_by = "DESC"
+        comparison_operator = "<"
+    else:  # direction == "next"
+        order_by = "ASC"
+        comparison_operator = ">"
+
+    cursor.execute(f"SELECT * FROM {table_name} WHERE camera = %s AND date_stamp {comparison_operator} %s ORDER BY date_stamp {order_by} LIMIT 1",
+                   (serial_number, input_timestamp.strftime("%Y%m%d-%H%M%S")))
+    row = cursor.fetchone()
+
+    if row is None:
+        if direction == "next":
+            cursor.execute(f"SELECT * FROM {table_name} WHERE camera = %s ORDER BY date_stamp DESC LIMIT 1",
+                           (serial_number,))
+            row = cursor.fetchone()
+
+            if row is None:
+                cursor.close()
+                connection.close()
+                return jsonify({"error": f"No data found for the specified username and serial number."})
+        else:  # direction == "previous"
+            cursor.execute(f"SELECT * FROM {table_name} WHERE camera = %s ORDER BY date_stamp ASC LIMIT 1",
+                           (serial_number,))
+            row = cursor.fetchone()
+
+            if row is None:
+                cursor.close()
+                connection.close()
+                return jsonify({"error": f"No data found for the specified username, serial number."})
+
+    date_stamp, cam_id, master_boxes_json = row[1], row[3], row[-2]
+    dt = datetime.strptime(date_stamp, "%Y%m%d-%H%M%S")
+    formatted_dt = dt.strftime("%B %d, %Y %I:%M %p")
+
+    img_path = f"mysite/static/{username}-{cam_id}-{date_stamp}.jpg"
+
+    url = f"https://agaicamstorage.s3.us-west-2.amazonaws.com/images/{username}-{cam_id}-{date_stamp}.jpg"
+    filename = f"{username}-{cam_id}-{date_stamp}.jpg"
+
+    response = requests.get(url)
+
+    if response.status_code == 200:
+        with open(f'mysite/static/{filename}', 'wb') as file:
+            file.write(response.content)
+            img_path = f"static/{username}-{cam_id}-{date_stamp}.jpg"
+    else:
+        print(f"Error downloading file: {response.status_code}")
+
+    master_boxes = json.loads(master_boxes_json)
+
+    response_data = {
+        "datetime": formatted_dt,
+        "datestring": date_stamp,
+        "imgurl": f"{request.url_root}{img_path}",
+        "master_boxes": master_boxes
+    }
+
+    cursor.close()
+    connection.close()
+
+    return jsonify(response_data)
+
+
+
+
+# @app.route('/create_client_table', methods=['GET'])
+# def create_client_table():
+#     # Implement the logic to create a table with a list of client ids/usernames and serials
+#     pass
 
 
 if __name__ == '__main__':
